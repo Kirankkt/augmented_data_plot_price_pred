@@ -77,7 +77,7 @@ def predict_price(model, training_data, area, location, beach_proximity, lake_pr
     return predicted_price
 
 # Streamlit UI
-st.title("Real Estate Price Predictor")
+st.title("Real Estate Price Predictor(Augmented dataset)")
 st.write("Predict the price of plots based on features like location, proximity to amenities, and area.")
 
 # Load and preprocess the data
