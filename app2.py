@@ -8,16 +8,16 @@ from sklearn.pipeline import Pipeline
 import category_encoders as ce
 import joblib
 
-# Load data function with updated caching
+# Load augmented data function with caching
 @st.cache_data
 def load_data():
     data = pd.read_csv("final_corrected_augmented_dataset.csv")
     return data
 
-# Load standard dataset
+# Load standard dataset function with caching
 @st.cache_data
 def load_standard_data():
-    standard_data = pd.read_csv("standardized_locations_dataset.csv")
+    standard_data = pd.read_csv("/mnt/data/standardized_locations_dataset.csv")
     return standard_data
 
 # Add weighted features based on proximity categories
@@ -82,42 +82,44 @@ def predict_price(model, training_data, area, location, beach_proximity, lake_pr
     predicted_price = max(0, predicted_price[0])  # Ensure no negative prices
     return predicted_price
 
+# Format in Indian money format
+def format_inr(value):
+    return f"₹{value:,.0f}".replace(',', ',')  # Ensures Indian money formatting
+
 # Streamlit UI
 st.title("Real Estate Price Predictor (Augmented Dataset)")
 st.write("Predict the price of plots based on features like location, proximity to amenities, and area.")
 
 # Load and preprocess the data
-augmented_data = load_data()
-augmented_data = add_weighted_features(augmented_data)
-augmented_data = add_location_mean_price(augmented_data)
-
-# Load the trained model
-model = joblib.load('xgb_real_estate_model.pkl')
+data = load_data()
+data = add_weighted_features(data)
+data = add_location_mean_price(data)
 
 # Load the standard dataset
 standard_data = load_standard_data()
 
+# Load the trained model
+model = joblib.load('xgb_real_estate_model.pkl')
+
 # User Inputs
 area = st.number_input("Enter the area in cents:", min_value=1.0, step=0.1)
-location = st.selectbox("Select the location:", options=sorted(augmented_data['Location'].unique()))
+location = st.selectbox("Select the location:", options=sorted(data['Location'].unique()))
 beach_proximity = st.selectbox("Select beach proximity:", options=['Inland', 'Sea view', 'Beachfront'])
 lake_proximity = st.selectbox("Select lake proximity:", options=['Inland', 'Lake view', 'Lakefront'])
 density = st.selectbox("Select density:", options=['Low', 'High'])
 
-# Display additional location data from the standard dataset
-if location in standard_data['Location'].unique():
-    location_data = standard_data[standard_data['Location'] == location]
-    mean_price_per_cent = location_data['Price'].sum() / location_data['Area'].sum()
-    num_plots = location_data.shape[0]
-    st.write(f"Mean Price per Cent for {location} (Standard Dataset): ₹{mean_price_per_cent:,.2f}")
-    st.write(f"Number of plots in the standard dataset for {location}: {num_plots}")
-else:
-    st.write("Location data not available in the standard dataset.")
+# Display Mean Price per Cent and Plot Count for the Location
+if location:
+    mean_price = standard_data.loc[standard_data['Location'] == location, 'Price'].sum() / \
+                 standard_data.loc[standard_data['Location'] == location, 'Area'].sum()
+    plot_count = standard_data.loc[standard_data['Location'] == location].shape[0]
+    st.write(f"Mean Price per Cent for {location}: {format_inr(mean_price)}")
+    st.write(f"Number of plots for {location}: {plot_count}")
 
 # Predict Button
 if st.button("Predict Price"):
     try:
-        predicted_price = predict_price(model, augmented_data, area, location, beach_proximity, lake_proximity, density)
-        st.success(f"Predicted Price for the plot: ₹{predicted_price:,.2f}")
+        predicted_price = predict_price(model, data, area, location, beach_proximity, lake_proximity, density)
+        st.success(f"Predicted Price for the plot: {format_inr(predicted_price)}")
     except Exception as e:
         st.error(f"Error: {str(e)}")
