@@ -17,7 +17,7 @@ def load_data():
 # Load standard dataset function with caching
 @st.cache_data
 def load_standard_data():
-    standard_data = pd.read_csv("/mnt/data/standardized_locations_dataset.csv")
+    standard_data = pd.read_csv("standardized_locations_dataset.csv")
     return standard_data
 
 # Add weighted features based on proximity categories
