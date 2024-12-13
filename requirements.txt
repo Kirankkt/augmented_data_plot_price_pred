@@ -5,3 +5,4 @@ scikit-learn==1.5.2
 xgboost
 category_encoders
 joblib
+babel
