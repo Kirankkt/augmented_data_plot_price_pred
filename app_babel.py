@@ -109,13 +109,14 @@ beach_proximity = st.selectbox("Select beach proximity:", options=['Inland', 'Se
 lake_proximity = st.selectbox("Select lake proximity:", options=['Inland', 'Lake view', 'Lakefront'])
 density = st.selectbox("Select density:", options=['Low', 'High'])
 
-# Calculate Mean Price per Cent and Plot Count for a Location
+# Calculate Mean Price per Cent and Plot Count for the Location
 if location:
-    location_data = standard_data[standard_data['Location'] == location]
-    mean_price = location_data['Price per cent'].mean()
-    plot_count = location_data.shape[0]
+    mean_price = standard_data.loc[standard_data['Location'] == location, 'Price'].sum() / \
+                 standard_data.loc[standard_data['Location'] == location, 'Area'].sum()
+    plot_count = standard_data.loc[standard_data['Location'] == location].shape[0]
     st.write(f"Mean Price per Cent for {location}: {format_inr(mean_price)}")
     st.write(f"Number of plots for {location}: {plot_count}")
+
 
 
 # Predict Button
